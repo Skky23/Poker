@@ -1,16 +1,18 @@
 package poker;
-import java.awt.BorderLayout;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import javax.swing.ImageIcon;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
@@ -18,24 +20,29 @@ import javax.swing.SwingConstants;
 public class GUIPoker extends JFrame {
 
 	private JPanel panelComputador, panelJugador, zonaJuego, panelBotones, panelTextos, aux1, aux2, aux3, aux4;
-	private JLabel titulo, computador, jugador, dinero, jugada;
+	private JLabel titulo, computador, jugador, dinero, apuesta;
 	private JButton iniciar, pasar, igualar, subir, retirarse, salir;
-	private JTextArea dineroA, jugadaA;
+	private JTextArea dineroA, apuestaA;
+	private Control control;
+	private Escuchas escucha;
+	private int apuesta1;
 	
 	public GUIPoker() {
 		
 		initGUI();
+		this.setUndecorated(true);
 		pack();
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setVisible(true);
+		this.setVisible(true);	
 	}
 	
 	public void initGUI() {
 		
 		this.getContentPane().setLayout(new GridBagLayout());
 		GridBagConstraints constraints = new GridBagConstraints();
+		
+		escucha = new Escuchas();
 		
 		//Parte norte de la ventana
 		Font font = new Font(Font.SERIF,Font.BOLD+Font.ITALIC,25);
@@ -141,18 +148,18 @@ public class GUIPoker extends JFrame {
 		dinero = new JLabel("Dinero:");
 		panelTextos.add(dinero);
 		
-		dineroA = new JTextArea();
+		dineroA = new JTextArea(1,9);
 		dineroA.setPreferredSize(new Dimension(30,19));
 		dineroA.setEditable(false);
 		panelTextos.add(dineroA);
 		
-		jugada = new JLabel("Jugada actual:");
-		panelTextos.add(jugada);
+		apuesta = new JLabel("Apuesta de la mesa:");
+		panelTextos.add(apuesta);
 		
-		jugadaA = new JTextArea();
-		jugadaA.setPreferredSize(new Dimension(30,19));
-		jugadaA.setEditable(false);
-		panelTextos.add(jugadaA);
+		apuestaA = new JTextArea(1,9);
+		apuestaA.setPreferredSize(new Dimension(30,19));
+		apuestaA.setEditable(false);
+		panelTextos.add(apuestaA);
 		
 		constraints.gridx=0;
 		constraints.gridy=6;
@@ -163,28 +170,31 @@ public class GUIPoker extends JFrame {
 		panelBotones.setPreferredSize(new Dimension(1000,35));
 		
 		iniciar = new JButton("Iniciar");
-		//iniciar.addActionListener(escucha);
+		iniciar.addActionListener(escucha);
+		panelBotones.add(iniciar);
 		
 		pasar = new JButton("Pasar");
-		//pasar.addActionListener(escucha);
-		
+		pasar.addActionListener(escucha);
+		pasar.setEnabled(false);
+		panelBotones.add(pasar);
+		/*
 		igualar = new JButton("Igualar");
-		//igualar.addActionListener(escucha);
-		
+		igualar.addActionListener(escucha);
+		igualar.setEnabled(false);
+		panelBotones.add(igualar);
+		*/
 		subir = new JButton("Subir");
-		//subir.addActionListener(escucha);
+		subir.addActionListener(escucha);
+		subir.setEnabled(false);
+		panelBotones.add(subir);
 		
 		retirarse = new JButton("Retirarse");
 		//retirarse.addActionListener(escucha);
+		retirarse.setEnabled(false);
+		panelBotones.add(retirarse);
 		
 		salir = new JButton("Salir");
-		//salir.addActionListener(escucha);
-		
-		panelBotones.add(iniciar);
-		panelBotones.add(pasar);
-		panelBotones.add(igualar);
-		panelBotones.add(subir);
-		panelBotones.add(retirarse);
+		salir.addActionListener(escucha);
 		panelBotones.add(salir);
 	
 		constraints.gridx=0;
@@ -192,7 +202,81 @@ public class GUIPoker extends JFrame {
 		constraints.gridwidth=3;
 		
 		add(panelBotones,constraints);
-
-
+		control = new Control();
+	}
+	
+	public void setApuestaMesa() {
+		control.apuestaMesa(apuesta1);
+		dineroA.setText(Integer.toString(control.getJugador().getDinero()));
+		apuestaA.setText(Integer.toString(control.getApuestaMesa()));
+	}
+	
+	public void jugar() {
+		if(control.getFase()==0) {
+			control.faseReparto();
+			for(int i=0;i<2;i++) {
+				panelComputador.add(control.getComputador().getCartasJugador().obtenerCarta(i));
+				panelJugador.add(control.getJugador().getCartasJugador().obtenerCarta(i));
+			}
+			setApuestaMesa();
+			revalidate();
+		}
+		else {
+			if(control.getFase()==1) {
+				control.faseFlop();
+				for(int i=0;i<3;i++) {
+					zonaJuego.add(control.getCartasMesa().obtenerCarta(i));
+				}
+				setApuestaMesa();
+				revalidate();
+			}
+			else {
+				if(control.getFase()==2) {
+					control.faseTurn();
+					zonaJuego.add(control.getCartasMesa().obtenerCarta(3));
+					setApuestaMesa();
+					revalidate();
+				}
+				else {
+					if(control.getFase()==3) {
+						control.faseRiver();
+						zonaJuego.add(control.getCartasMesa().obtenerCarta(4));
+						setApuestaMesa();
+						revalidate();
+					}
+				}
+			}
+		}
+	}
+	
+	private class Escuchas implements ActionListener {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			if(e.getSource()==salir) {
+				System.exit(0);
+			}
+			else {
+				if(e.getSource()==iniciar) {
+					apuesta1=Integer.parseInt(JOptionPane.showInputDialog("Tiene 200 dólares, introduzca el valor de su apuesta"));
+					jugar();
+					iniciar.setEnabled(false);
+					pasar.setEnabled(true);
+					subir.setEnabled(true);
+				}
+				else {
+					if(e.getSource()==pasar) {
+						jugar();						
+					}
+					else {
+						if(e.getSource()==subir) {
+							apuesta1=Integer.parseInt(JOptionPane.showInputDialog("Introduzca el valor que desea agregar a su apuesta"));
+							jugar();
+						}
+					}
+				}
+			}
+		}
 	}
 }

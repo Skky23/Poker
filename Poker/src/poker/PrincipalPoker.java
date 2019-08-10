@@ -15,8 +15,6 @@ public class PrincipalPoker {
 			  } 									
 		  catch (Exception e) {}
 		  
-		  EventQueue.invokeLater(new Runnable() {public void run() { GUIPoker myWindow = new GUIPoker(); }});
-
+		  EventQueue.invokeLater(new Runnable() {public void run() { VentanaInicio myWindow = new VentanaInicio(); }});
 	}
-
 }

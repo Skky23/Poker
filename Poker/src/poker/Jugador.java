@@ -2,27 +2,35 @@ package poker;
 
 public class Jugador {
 	
-	private Baraja barajaJugador;
+	private Baraja cartasJugador;
 	private int dinero;
-	
+	private int apuesta;
+	private boolean subioApuesta;
 	
 	public Jugador() {
-		barajaJugador = new Baraja();
-		dinero = 100000;
+		cartasJugador = new Baraja();
+		dinero = 200;
+		apuesta=0;
+		subioApuesta=false;
 	}
-	
+
 	public int getDinero() {
 		return dinero;
 	}
 
+	public Baraja getCartasJugador() {
+		return cartasJugador;
+	}
 
 	public void setDinero(int dinero) {
-		this.dinero -= dinero;
+		this.dinero = dinero;
+	}
+	
+	public int getApuesta() {
+		return apuesta;
 	}
 
-
-	public Baraja getBarajaJugador() {
-		return barajaJugador;
+	public void setApuesta(int apuesta) {
+		this.apuesta = apuesta;
 	}
-
 }
